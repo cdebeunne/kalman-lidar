@@ -1,4 +1,4 @@
-function [z, Pz, fail, err] = get_relative_transform_LIDAR(filtered_traj1, filtered_traj2, detector_params, err)
+function [z, Pz, fail] = get_relative_transform_LIDAR(filtered_traj1, filtered_traj2, detector_params)
 
 % if size(filtered_traj1,1) == 0 || size(filtered_traj2,1)==0
 %     fail = 1;
@@ -74,7 +74,6 @@ try
     corespondencesEdge = corespondencesEdge(inliers,:);
 catch
     warning('not enough matches');
-    err = [err;k];
 end
 
 y0 = [0,0,0,0,0,0];
@@ -101,7 +100,6 @@ try
 catch
     warning('optimisation failure')
     fail = 1;
-    err = [err; k];
 end
 
 

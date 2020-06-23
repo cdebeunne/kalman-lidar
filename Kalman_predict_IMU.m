@@ -2,7 +2,7 @@ function [X, PX] = Kalman_predict_IMU(X, PX, imuACC, imuGYR, Q, dt)
 RImu_lidar = [0 1 0; 1 0 0; 0 0 -1];
 u = [RImu_lidar*imuACC'; RImu_lidar*imuGYR'];
 X = f(X,u,dt);
-PX = Jf_x(X,u,dt)*PX*Jf_x(X,u,dt)' + Q;
+PX = Jf_x(X,u,dt)*PX*Jf_x(X,u,dt)' + Jf_u(X,dt)*Q*Jf_u(X,dt)';
 end
 
 function pred = f(X,u,dt)
@@ -36,3 +36,20 @@ jacob = [ 1, 0, 0,                                                              
     0, 0, 0,                                                                                                                                                                                                                                                        0,                                                                                                                                                                                       0,                                                                                                                                                                                                     0,                                                                             0,                                                                             0,                              0,   0,   0,   0,                                                                               0,                                                                               0,                                 1];
 end
 
+function jacob = Jf_u(X,dt)
+jacob = [                                                dt^2*cos(conj(X(5)))*cos(conj(X(6))),                                                dt^2*cos(conj(X(5)))*sin(conj(X(6))),              -dt^2*sin(conj(X(5))),  0,  0,  0;
+    -dt^2*(cos(conj(X(4)))*sin(conj(X(6))) - cos(conj(X(6)))*sin(conj(X(4)))*sin(conj(X(5)))),  dt^2*(cos(conj(X(4)))*cos(conj(X(6))) + sin(conj(X(4)))*sin(conj(X(5)))*sin(conj(X(6)))), dt^2*cos(conj(X(5)))*sin(conj(X(4))),  0,  0,  0;
+    dt^2*(sin(conj(X(4)))*sin(conj(X(6))) + cos(conj(X(4)))*cos(conj(X(6)))*sin(conj(X(5)))), -dt^2*(cos(conj(X(6)))*sin(conj(X(4))) - cos(conj(X(4)))*sin(conj(X(5)))*sin(conj(X(6)))), dt^2*cos(conj(X(4)))*cos(conj(X(5))),  0,  0,  0;
+    0,                                                                               0,                                0, dt,  0,  0;
+    0,                                                                               0,                                0,  0, dt,  0;
+    0,                                                                               0,                                0,  0,  0, dt;
+    dt,                                                                               0,                                0,  0,  0,  0;
+    0,                                                                              dt,                                0,  0,  0,  0;
+    0,                                                                               0,                               dt,  0,  0,  0;
+    0,                                                                               0,                                0,  0,  0,  0;
+    0,                                                                               0,                                0,  0,  0,  0;
+    0,                                                                               0,                                0,  0,  0,  0;
+    0,                                                                               0,                                0,  0,  0,  0;
+    0,                                                                               0,                                0,  0,  0,  0;
+    0,                                                                               0,                                0,  0,  0,  0];
+end

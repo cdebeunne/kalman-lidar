@@ -10,7 +10,6 @@ Jh_X = Jh_x(X, Xold);
 
 % Covariance de l'innovation
 S = Jh_X*PX*Jh_X'+Jh_Xold*PXold*Jh_Xold'+Pz;
-
 % Gain de Kalman
 K = PX*Jh_X'/S;
 X = X + K*Innovation;
@@ -54,11 +53,11 @@ end
 function H = Jh_xold(xp1,x)
 % jacobienne de h par rapport à x
 dt = 0.0001;
-delta_x = [0.001; zeros(14,1)];
+delta_x = [0.01; zeros(14,1)];
 H1 = (h(xp1,x)-h(xp1,x+delta_x))/dt;
-delta_y = [0; 0.001; zeros(13,1)];
+delta_y = [0; 0.01; zeros(13,1)];
 H2 = (h(xp1,x)-h(xp1,x+delta_y))/dt;
-delta_z = [0;0;0.001; zeros(12,1)];
+delta_z = [0;0;0.01; zeros(12,1)];
 H3 = (h(xp1,x)-h(xp1,x+delta_z))/dt;
 delta_yaw = [zeros(3,1); 0.005; zeros(11,1)];
 H4 = (h(xp1,x)-h(xp1,x+delta_yaw))/dt;
@@ -72,11 +71,11 @@ end
 function H = Jh_x(xp1,x)
 % jacobienne de h par rapport à xp1
 dt = 0.0001;
-delta_x = [0.001; zeros(14,1)];
+delta_x = [0.01; zeros(14,1)];
 H1 = (h(xp1,x)-h(xp1+delta_x,x))/dt;
-delta_y = [0; 0.001; zeros(13,1)];
+delta_y = [0; 0.01; zeros(13,1)];
 H2 = (h(xp1,x)-h(xp1+delta_y,x))/dt;
-delta_z = [0;0;0.001; zeros(12,1)];
+delta_z = [0;0;0.01; zeros(12,1)];
 H3 = (h(xp1,x)-h(xp1+delta_z,x))/dt;
 delta_yaw = [zeros(3,1); 0.005; zeros(11,1)];
 H4 = (h(xp1,x)-h(xp1+delta_yaw,x))/dt;

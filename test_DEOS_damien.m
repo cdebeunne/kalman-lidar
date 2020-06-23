@@ -1,5 +1,5 @@
-load FILT_IMU_DAT.mat;
-load FILT_VEL_SCAN_DAT.mat;
+% load FILT_IMU_DAT.mat;
+% load FILT_VEL_SCAN_DAT.mat;
 
 imuTime = filtered_ROSTime;
 imuACC = filtered_ACC;
@@ -20,13 +20,11 @@ detector_params.barycenterThresholdPlane = 10;
 %% KALMAN intialisation
 X = zeros(15,1);
 X(15) = 9.81; % gravitation biais 
-PX = zeros(15, 15);
+PX = eye(15, 15);
 Xold = X;
 PXold = PX;
-Q = [5e-4*eye(3,3) zeros(3,12);
-    zeros(3,3), 5e-4*eye(3,3), zeros(3,9);
-    zeros(3,6), 0.5*eye(3,3), zeros(3,6);
-    zeros(6,9) 0.00001*eye(6,6)];
+Q = [5e-4*eye(3,3) zeros(3,3);
+    zeros(3,3), 5e-4*eye(3,3)];
 fail = 0;
 err = [];
 posList = [0;0;0];
@@ -35,13 +33,13 @@ posList = [0;0;0];
 %% Time index for data reading in order
 idx.imu = 1; 
 idx.lidar = 2; % 2 parcequ'on peut rien faire du premier tout seul
-while idx.imu < length(time) && idx.lidar < length(imuTime)
+while idx.imu < length(imuTime) && idx.lidar < length(time)
     
     % If next measure is IMU    
     if time(idx.lidar) > imuTime(idx.imu)
        %% Predict pose with IMU Kalman until IMU time
-       dt = time(idx.imu+1)-time(idx.imu);
-       [X, PX] = Kalman_predict_IMU(X, PX, imuACC(idx.imu,:), imuGYR(idx.imu,:), Q, dt);
+       [X, PX] = Kalman_predict_IMU(X, PX, imuACC(idx.imu,:), imuGYR(idx.imu,:), Q, 0.01);
+       
        %% Set pointer to next IMU data
        idx.imu = idx.imu + 1;
     
@@ -55,18 +53,17 @@ while idx.imu < length(time) && idx.lidar < length(imuTime)
               
        
        %% Process LIDAR scan : get transform + uncertainty of the transform
-       [z, Pz, fail, err] = get_relative_transform_LIDAR(filtered_traj{idx.lidar}, filtered_traj{idx.lidar-1}, detector_params, err);
+       [z, Pz, fail] = get_relative_transform_LIDAR(filtered_traj{idx.lidar-1}, filtered_traj{idx.lidar}, detector_params);
         if fail
             continue % un des scan est vide ou opti a foiré, on prend la prochaine mesure
         end
        
        %% Update Kalman
-       Pz = [1e-2*eye(3,3), zeros(3,3);
-            zeros(3,3), 0.1*eye(3,3)];
+       Pz = [0.01*eye(3,3), zeros(3,3);
+            zeros(3,3), 0.01*eye(3,3)];
        [X, PX] = Kalman_update(X, PX, Xold, PXold, z, Pz);
        Xold = X;
        PXold = PX;
-       disp(X');
        %% Set pointer to next LIDAR data
        idx.lidar = idx.lidar + 1;       
     end
