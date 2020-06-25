@@ -9,7 +9,7 @@ time = filtered_scantime;
 % point cloud analysis parameters
 detector_params.c_edge = 0.2;
 detector_params.c_plane = 0.05;
-detector_params.distThresholdEdge = 0.6;
+detector_params.distThresholdEdge = 0.5;
 detector_params.minClusterSizeEdge = 5;
 detector_params.barycenterThresholdEdge = 1.5;
 detector_params.distThresholdPlane = 1;
@@ -19,27 +19,28 @@ detector_params.barycenterThresholdPlane = 10;
 
 %% KALMAN intialisation
 X = zeros(15,1);
-X(15) = 9.81; % gravitation biais
+X(15) = 9.8; % gravitation biais
 PX = [zeros(9,15);
-    zeros(6,9),0.001*eye(6,6)];
+    zeros(6,9),10*eye(6,6)];
 Xold = X;
 PXold = PX;
-Q = [1000*eye(3,3) zeros(3,3);
+Q = [1*eye(3,3) zeros(3,3);
     zeros(3,3), 5e-4*eye(3,3)];
+Q(2,2) = 10000000;
 fail = 0;
 err = [];
-posList = [0;0;0];
+posList = zeros(15,1);
 
 
 %% Time index for data reading in order
-idx.imu = 2;
+idx.imu = 1;
 idx.lidar = 2; % 2 parcequ'on peut rien faire du premier tout seul
 while idx.imu < length(imuTime) && idx.lidar < length(time)
     
     % If next measure is IMU
     if time(idx.lidar) > imuTime(idx.imu)
         %% Predict pose with IMU Kalman until IMU time
-        dt = imuTime(idx.imu)-imuTime(idx.imu-1);
+        dt = imuTime(idx.imu+1)-imuTime(idx.imu);
         if dt > 0.1
             dt = 0.01;
         end
@@ -51,8 +52,11 @@ while idx.imu < length(imuTime) && idx.lidar < length(time)
         % If next measure is LIDAR
     else
         %% Predict pose with state until LIDAR time
-        dt = time(idx.lidar)-imuTime(idx.imu);
-        [X, PX] = Kalman_predict_NO_IMU(X, PX, dt); % Ou on suppose que la
+        dt = imuTime(idx.imu)-time(idx.lidar);
+        if dt < 0.1
+            [X, PX] = Kalman_predict_NO_IMU(X, PX, imuGYR(idx.imu,:)', dt);
+        end
+       % Ou on suppose que la
         %pose est Ok à ce stade, sinon pour faire ca propre il faut les
         %vitesses dans le vecteur d'état pour s'auto predire
         
@@ -64,19 +68,20 @@ while idx.imu < length(imuTime) && idx.lidar < length(time)
         end
         
         %% Update Kalman
-        Pz = [0.01*eye(3,3), zeros(3,3);
+        Pz = [0.005*eye(3,3), zeros(3,3);
             zeros(3,3), 0.05*eye(3,3)];
         [X, PX] = Kalman_update(X, PX, Xold, PXold, z, Pz);
         Xold = X;
         PXold = PX;
         disp(X');
+        disp(idx.lidar);
         
         %% Set pointer to next LIDAR data
         idx.lidar = idx.lidar + 1;
     end
     
     %% Save pose for display
-    posList = [posList, X(1:3)];
+    posList = [posList, X];
 end
 
 % load GNSS_DAT.mat

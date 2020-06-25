@@ -3,11 +3,10 @@ function filteredCloud = cloudFilter(pc, type)
 
 % reshape point cloud
 
-ptCloud = pcdenoise(pointCloud(pc));
 if type == "VLP16"
-    filteredCloud = pointcloudMatrixVLP16(ptCloud.Location);
+    filteredCloud = pointcloudMatrixVLP16(pc);
 elseif type == "HDL64"
-    filteredCloud = pointcloudMatrixHDL64(ptCloud.Location);
+    filteredCloud = pointcloudMatrixHDL64(pc);
 end
 
 end

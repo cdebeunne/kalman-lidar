@@ -90,18 +90,19 @@ x0 = [0,0,0,0,0,0];
 lb = [-1.5, -0.05, -0.02, -0.01, -0.01, -pi/6];
 ub = [1.5, 0.05, 0.02, 0.01, 0.01, pi/6];
 f = @(x)globalCost_orth(corespondencesEdge, corespondencesPlane,...
-    edgePoints_1, directionsEdge_1, barycenterEdge_2, directionsEdge_2,...
+    edgePoints_1, directionsEdge_1,...
+    barycenterEdge_2, directionsEdge_2,...
     normalsPlane_1, normalsPlane_2, x);
-
 try
     options = optimoptions('lsqnonlin','FunctionTolerance', 0.001, 'MaxFunctionEvaluations', 1000);
     [x,resnorm,~,~,~,~,jacobian] = lsqnonlin(f,x0,lb,ub,options);
+    z = x';
+    Pz = resnorm\(jacobian'*jacobian);
     fail = 0;
 catch
     warning('optimisation failure')
+    z = zeros(6,1);
+    Pz = 10000*eye(6,6);
     fail = 1;
 end
-
-
-z = x';
-Pz = resnorm\(jacobian'*jacobian);
+end

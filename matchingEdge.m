@@ -9,7 +9,7 @@ corespondencesEdge = [];
 % idenx list to prevent from double match
 idxList = [];  
 for i=1:length(edgePoints_1)
-    dist = 6;
+    dist = 5;
     idx = 0;
     for j=1:length(edgePoints_2)
         try
@@ -33,4 +33,3 @@ for i=1:length(edgePoints_1)
 end
 
 end
-
