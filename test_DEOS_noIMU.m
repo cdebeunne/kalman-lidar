@@ -3,9 +3,9 @@
 % point cloud analysis parameters
 c_edge = 0.2;
 c_plane = 0.05;
-distThresholdEdge = 0.6;
+distThresholdEdge = 0.55;
 minClusterSizeEdge = 5;
-barycenterThresholdEdge = 1.5;
+barycenterThresholdEdge = 1;
 distThresholdPlane = 1;
 minClusterSizePlane = 30;
 barycenterThresholdPlane = 10;
@@ -21,8 +21,9 @@ phi = 0;
 psi = 0;
 tpp = [theta, phi, psi];
 R = eye(3,3);
+zList = [];
 
-for k=1:600
+for k=1:1000
     disp(k);
     
     % in case of empty clouds
@@ -49,15 +50,12 @@ for k=1:600
     
     size1 = size(filteredCloud_1.Location, 1);
     size2 = size(filteredCloud_1.Location, 2);
-    
-    
+
     
     %----------------------------------------------------------------------
     % evaluate the corespondence
     %----------------------------------------------------------------------
-    
-    
-    
+
     
     % creating the edgeClouds
     
@@ -112,7 +110,11 @@ for k=1:600
     firstEval = f(x0);
     inliers = ~isoutlier(firstEval);
     inliers = logical(inliers(:,1).*inliers(:,2));
-    corespondencesEdge = corespondencesEdge(inliers,:);
+    try
+        corespondencesEdge = corespondencesEdge(inliers,:);
+    catch
+        warning('marche po');
+    end
 
     
     y0 = [0,0,0,0,0,0];
@@ -154,6 +156,7 @@ for k=1:600
     disp(xWorld);
     posList = [posList, xWorld];
     tpp = [tpp; [theta, phi, psi]];
+    zList = [zList, x(1:6)'];
 end
 
 % load KITTI_OSTX.mat
@@ -178,4 +181,4 @@ title('Attitude comparison');
 
 % save results
 
-save('results.mat', 'tpp', 'posList');
+save('LIDAR_Odom.mat', 'tpp', 'posList', 'zList');
