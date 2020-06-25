@@ -1,10 +1,30 @@
-% load FILT_IMU_DAT.mat;
-% load FILT_VEL_SCAN_DAT.mat;
+%% Load data if requiered
+if ~exist('filtered_ACC', 'var')
+    load FILT_IMU_DAT.mat;
+    load FILT_VEL_SCAN_DAT.mat;
+    load GNSS_DAT.mat
+    
+    % rename data
+    imuTime = filtered_ROSTime;
+    imuACC = filtered_ACC;
+    imuGYR = filtered_GYR;
+    time = filtered_scantime;  
+    
+    GTpos = groundtruth(filtered_posEnu, -3.2*pi/10); 
+    
+end
 
-imuTime = filtered_ROSTime;
-imuACC = filtered_ACC;
-imuGYR = filtered_GYR;
-time = filtered_scantime;
+
+%% Pepare display for the results
+figure(1);
+plot(GTpos(:,1),GTpos(:,2));
+hold on
+axis equal;
+%legend('Edge & plane odometry', 'Groundtruth');
+title('Position comparison');
+posList = [0;0;0];
+hE = [];
+
 
 % point cloud analysis parameters
 detector_params.c_edge = 0.2;
@@ -24,9 +44,9 @@ PX = [zeros(9,15);
     zeros(6,9),10*eye(6,6)];
 Xold = X;
 PXold = PX;
-Q = [1*eye(3,3) zeros(3,3);
+Q = 10*[10*eye(3,3) zeros(3,3);
     zeros(3,3), 5e-4*eye(3,3)];
-Q(2,2) = 10000000;
+%Q(2,2) = 10000000;
 fail = 0;
 err = [];
 posList = zeros(15,1);
@@ -44,7 +64,7 @@ while idx.imu < length(imuTime) && idx.lidar < length(time)
         if dt > 0.1
             dt = 0.01;
         end
-        [X, PX] = Kalman_predict_IMU(X, PX, imuACC(idx.imu,:), imuGYR(idx.imu,:), Q, dt);
+        [X, PX] = Kalman_predict_IMU_Damien(X, PX, imuACC(idx.imu,:), imuGYR(idx.imu,:), Q, dt);
         
         %% Set pointer to next IMU data
         idx.imu = idx.imu + 1;
@@ -82,6 +102,14 @@ while idx.imu < length(imuTime) && idx.lidar < length(time)
     
     %% Save pose for display
     posList = [posList, X];
+    
+    plot(X(1), X(2),'.g');
+    hE = traceEllipse(X(1:2), PX(1:2,1:2), 'r', hE);
+    %if mod(idx.imu,50) == 0
+        drawnow
+    %end    
+    
+    
 end
 
 % load GNSS_DAT.mat
@@ -95,7 +123,7 @@ plot(posList(1,:), posList(2,:));
 hold on;
 plot(pos(:,1),pos(:,2));
 axis equal;
-legend('Edge & plane odometry', 'Groundtruth');
+%legend('Edge & plane odometry', 'Groundtruth');
 title('Position comparison');
 
 % save results

@@ -1,5 +1,6 @@
 function [X, PX] = Kalman_predict_IMU(X, PX, imuACC, imuGYR, Q, dt)
-RImu_lidar = [1 0 0; 0 -1 0; 0 0 -1];
+%RImu_lidar = [1 0 0; 0 -1 0; 0 0 -1];
+RImu_lidar = [0 1 0; 1 0 0; 0 0 -1];
 u = [RImu_lidar*imuACC'; RImu_lidar*imuGYR'];
 X = f(X,u,dt);
 PX = Jf_x(X,u,dt)*PX*Jf_x(X,u,dt)' + Jf_u(X,dt)*Q*Jf_u(X,dt)';
